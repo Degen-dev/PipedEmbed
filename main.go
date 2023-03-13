@@ -13,16 +13,16 @@ import (
 func main() {
 
 	type ApiResponse struct {
-		Title       string `json:"title"`
-		ThumbNail   string `json:"thumbnailUrl"`
-		Uploader    string `json:"uploader"`
-		Duration    int    `json:"duration"`
-		Views       int    `json:"views"`
+		Title     string `json:"title"`
+		ThumbNail string `json:"thumbnailUrl"`
+		Uploader  string `json:"uploader"`
+		Duration  int    `json:"duration"`
+		Views     int    `json:"views"`
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
-		
+
 		if r.URL.Path == "/" {
 			_, err := fmt.Fprintf(w, "<!DOCTYPE html><head><meta http-equiv=\"Refresh\" content=\"0; url='https://piped.kavin.rocks/'\"></head>")
 			if err != nil {
@@ -38,7 +38,7 @@ func main() {
 			defer func(Body io.ReadCloser) {
 				err := Body.Close()
 				if err != nil {
-					log.Fatal("FATAL ERROR OCCURED WHEN TRYING TO CLOSE REQUEST: ", err)
+					log.Println("An error occured when trying to get JSON response ", err)
 				}
 			}(resp.Body)
 			body, err := ioutil.ReadAll(resp.Body)
@@ -66,3 +66,4 @@ func sortTime(num int) string {
 
 	return vidLength
 }
+
