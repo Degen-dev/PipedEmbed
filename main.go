@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 	"io"
 	"io/ioutil"
 	"log"
@@ -46,7 +48,7 @@ func main() {
 				log.Println("An error occured when trying to parse JSON response: ", err)
 			}
 
-			_, err = fmt.Fprintf(w, "<!DOCTYPE html><head><meta content=\"%s\" property=\"og:title\"><meta content=\"Channel: %s | Views: %d | Duration: %s\" property=\"og:description\"><meta content=\"https://piped.kavin.rocks%s\" property=\"og:url\"><meta content=\"%s\" property=\"og:image\"><meta http-equiv=\"Refresh\" content=\"0; url='https://piped.kavin.rocks%s'\"></head>", embedInfo.Title, embedInfo.Uploader, embedInfo.Views, sortTime(embedInfo.Duration), r.URL.Path, embedInfo.ThumbNail, r.URL.Path)
+			_, err = fmt.Fprintf(w, "<!DOCTYPE html><head><meta content=\"%s\" property=\"og:title\"><meta content=\"Channel: %s | Views: %s | Duration: %s\" property=\"og:description\"><meta content=\"https://piped.kavin.rocks%s\" property=\"og:url\"><meta content=\"%s\" property=\"og:image\"><meta http-equiv=\"Refresh\" content=\"0; url='https://piped.kavin.rocks%s'\"></head>", embedInfo.Title, embedInfo.Uploader, sortViews(embedInfo.Views), sortTime(embedInfo.Duration), r.URL.Path, embedInfo.ThumbNail, r.URL.Path)
 			if err != nil {
 				log.Println("An error occured when trying to send video data: ", err)
 			}
@@ -67,3 +69,9 @@ func sortTime(num int) string {
 	return vidLength
 }
 
+func sortViews(num int) string {
+	p := message.NewPrinter(language.English)
+	sorted := p.Sprintf("%d", num)
+
+	return sorted
+}
