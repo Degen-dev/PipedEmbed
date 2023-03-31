@@ -23,30 +23,35 @@ func main() {
 		ctx.SetContentType("text/html")
 
 		if string(ctx.Path()) == "/" {
-			ctx.WriteString("<!DOCTYPE html><head><meta http-equiv=\"Refresh\" content=\"0; url='https://piped.kavin.rocks/'\"></head>")
+			_, err := ctx.WriteString("<!DOCTYPE html><head><meta http-equiv=\"Refresh\" content=\"0; url='https://piped.kavin.rocks/'\"></head>")
+			if err != nil {
+				log.Println("An error occurred when trying to redirect to Piped: ", err)
+				return
+			}
 		} else if string(ctx.Path()) != "/" {
 			var embedInfo ApiResponse
 			path := "https://pipedapi.kavin.rocks/streams" + string(ctx.Path())
 			statusCode, body, err := fasthttp.Get(nil, path)
 			if err != nil || statusCode != fasthttp.StatusOK {
-				log.Println("An error occurred when trying to get video info:", err)
+				log.Println("An error occurred when trying to get video info: ", err, statusCode)
 				return
 			}
 
 			if err := json.Unmarshal(body, &embedInfo); err != nil {
-				log.Println("An error occurred when trying to parse JSON response:", err)
+				log.Println("An error occurred when trying to parse JSON response: ", err)
 				return
 			}
 
-			ctx.WriteString(fmt.Sprintf("<!DOCTYPE html><head><meta content=\"%s\" property=\"og:title\"><meta content=\"Channel: %s | Views: %s | Duration: %s\" property=\"og:description\"><meta content=\"https://piped.kavin.rocks%s\" property=\"og:url\"><meta content=\"%s\" property=\"og:image\"><meta http-equiv=\"Refresh\" content=\"0; url='https://piped.kavin.rocks%s'\"></head>", embedInfo.Title, embedInfo.Uploader, sortViews(embedInfo.Views), sortTime(embedInfo.Duration), string(ctx.Path()), embedInfo.ThumbNail, string(ctx.Path())))
+			_, err = ctx.WriteString(fmt.Sprintf("<!DOCTYPE html><head><meta content=\"%s\" property=\"og:title\"><meta content=\"Channel: %s | Views: %s | Duration: %s\" property=\"og:description\"><meta content=\"https://piped.kavin.rocks%s\" property=\"og:url\"><meta content=\"%s\" property=\"og:image\"><meta http-equiv=\"Refresh\" content=\"0; url='https://piped.kavin.rocks%s'\"></head>", embedInfo.Title, embedInfo.Uploader, sortViews(embedInfo.Views), sortTime(embedInfo.Duration), string(ctx.Path()), embedInfo.ThumbNail, string(ctx.Path())))
+			if err != nil {
+				log.Println("An error occurred when trying to send video info: ", err)
+			}
 		}
 	}
 
-	server := fasthttp.Server{
-		Handler: requestHandler,
+	if err := fasthttp.ListenAndServe("127.0.0.1:9072", requestHandler); err != nil {
+		log.Fatal(err)
 	}
-
-	log.Fatal(server.ListenAndServe(":9072"))
 }
 
 func sortTime(num int) string {
